@@ -20,22 +20,36 @@
     (will-unmount [_]
       (println "I have unmounted"))))
 
+(defn other-test [data owner]
+  (reify
+    om/IWillMount
+    (will-mount [_]
+      (println "I have mounted2"))
 
+    om/IRender
+    (render [_]
+      (dom/div nil (:text data)))
+
+    om/IWillUnmount
+    (will-unmount [_]
+      (println "I have unmounted2"))))
 
 (defn app-component [data owner]
   (reify
     om/IRender
     (render [_]
       (dom/div nil
-       (if (:child-component data)
-         (om/build test-component (:child-component data))
-         (dom/strong nil "Not building child component"))))))
+               (om/build other-test (:ok data))
+               (if (:child-component data)
+                 (om/build test-component (:child-component data))
+                 (dom/strong nil "Not building child component"))))))
 
 (defn change-state-atom [app-state]
   (.setInterval js/window
                 #(if (get @app-state :child-component)
                    (reset! app-state {:nope "nope"})
-                   (reset! app-state {:child-component {:yar "Hello, child component here."}}))
+                   (reset! app-state {:child-component {:yar "Hello, child component here."}
+                                      :ok {:text  "yes"}}))
                 1000))
 
 (change-state-atom app-state)
